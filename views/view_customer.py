@@ -17,7 +17,8 @@ class ViewCustomer(flet.View):
         self.append_widgets(widget=self.row_dropdowns,
                             append_widgets=[self.hall_dropdown, self.genre_dropdown, self.film_dropdown])
 
-        self.hall_place_table = flet.Column()
+        self.hall_place_table = flet.Column(height=450)
+        self.hall_place_table.scroll = True
 
         self.sales_column = flet.Column(height=400)
         self.sales_column.scroll = True
