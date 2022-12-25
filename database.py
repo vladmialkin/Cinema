@@ -10,6 +10,7 @@ class Database:
         self.cursor = None
         self.connect_to_db()
         self.create_tables()
+        self.session_id = None
         #self.insert_hall(name_hall="Зал 2", size_hall=40, rows=6)
         #self.insert_genre(genre_name="Драма")
 
@@ -18,7 +19,7 @@ class Database:
             self.database = mysql.connector.connect(
                 user='admi',
                 password='admin',
-                host='172.17.0.3',
+                host='172.17.0.2',
                 database='intership',
                 port='3306'
             )
@@ -41,6 +42,7 @@ class Database:
                             "id INT NOT NULL AUTO_INCREMENT,"
                             "id_hall INT,"
                             "employment INT,"
+                            "session_id INT,"
                             "PRIMARY KEY (id))")
         self.database.commit()
 
@@ -50,19 +52,43 @@ class Database:
                             "PRIMARY KEY (id))")
         self.database.commit()
 
-    def get_halls(self):
+        self.cursor.execute("CREATE TABLE IF NOT EXISTS film("
+                            "id INT NOT NULL AUTO_INCREMENT,"
+                            "name TEXT,"
+                            "genre_id int,"
+                            "PRIMARY KEY (id))")
+        self.database.commit()
+
+        self.cursor.execute("CREATE TABLE IF NOT EXISTS session("
+                            "id INT NOT NULL AUTO_INCREMENT,"
+                            "TIME TEXT,"
+                            "PRIMARY KEY (id))")
+        self.database.commit()
+
+        self.cursor.execute("CREATE TABLE IF NOT EXISTS session_information("
+                            "id INT NOT NULL AUTO_INCREMENT,"
+                            "session_id INT,"
+                            "hall_id INT,"
+                            "film_id INT,"
+                            "PRIMARY KEY (id))")
+        self.database.commit()
+
+    def get_halls(self, session_id):
         """функция получения списка залов"""
-        self.cursor.execute("SELECT * FROM hall")
+        self.cursor.execute(f"SELECT DISTINCT hall.id, hall.name, hall.size_hall, count_row FROM hall "
+                            f"LEFT JOIN session_information "
+                            f"ON hall.id = session_information.hall_id "
+                            f"WHERE session_information.session_id = {session_id}")
         values = self.cursor.fetchall()
         return values
 
-    def get_hall(self, hall_id):
+    def get_hall(self, hall_id: int):
         """функция получает данные зала"""
         self.cursor.execute(f"SELECT * FROM hall WHERE id={hall_id}")
         values = self.cursor.fetchall()
         return values
 
-    def insert_hall(self, name_hall: str, size_hall: int, rows: int):
+    def insert_hall(self, name_hall: str, size_hall: int, rows: int, session_id: int):
         """функция добавляет новый зал в БД"""
         if isinstance(size_hall, int):
             self.cursor.execute(f"INSERT INTO hall(name, size_hall, count_row) "
@@ -72,11 +98,11 @@ class Database:
             values = self.cursor.fetchall()
             id_last_hall = values[-1][0]
             for index in range(size_hall):
-                self.cursor.execute(f"INSERT INTO places(id_hall, employment) "
-                                    f"VALUES({id_last_hall},{0})")
+                self.cursor.execute(f"INSERT INTO places(id_hall, employment, session_id) "
+                                    f"VALUES({id_last_hall},{0}, {session_id})")
                 self.database.commit()
 
-    def insert_genre(self, genre_name):
+    def insert_genre(self, genre_name: str):
         """функция добавляет новый жанр в БД"""
         self.cursor.execute(f"INSERT INTO genre(name) "
                             f"VALUES('{genre_name}')")
@@ -88,8 +114,56 @@ class Database:
         values = self.cursor.fetchall()
         return values
 
-    def get_places(self, id_hall):
+    def get_places(self, id_hall: int, session_id):
         """функция получает данные мест зала"""
-        self.cursor.execute(f"SELECT * FROM places WHERE id_hall={id_hall}")
+        self.cursor.execute(f"SELECT * FROM places WHERE id_hall={id_hall} and session_id={session_id}")
         values = self.cursor.fetchall()
         return values
+
+    def insert_film(self, name_film: str, genre_id: int):
+        """функция добавляет новый фильс в БД"""
+        self.cursor.execute(f"INSERT INTO film(name, genre_id) "
+                            f"VALUES('{name_film}',{genre_id})")
+        self.database.commit()
+
+    def get_films(self, session_id, hall_id):
+        """функция получает данные всех фильмов"""
+        self.cursor.execute(f"SELECT DISTINCT film.id, film.name, film.genre_id FROM film "
+                            f"LEFT JOIN session_information "
+                            f"ON film.id = session_information.film_id "
+                            f"WHERE session_information.session_id = {session_id} and "
+                            f"session_information.hall_id = {hall_id}")
+        values = self.cursor.fetchall()
+        return values
+
+    def insert_session(self, time: str):
+        """функция добавляет новую сессию в БД"""
+        self.cursor.execute(f"INSERT INTO session(time) "
+                            f"VALUES('{time}')")
+        self.database.commit()
+
+    def get_session(self, session_id: int):
+        """функция получает данные сеанса по id"""
+        self.cursor.execute(f"SELECT * FROM session " 
+                            f"WHERE id = {session_id}")
+        values = self.cursor.fetchone()
+        return values
+
+    def get_sessions(self):
+        """функция получает данные всех фильмов"""
+        self.cursor.execute(f"SELECT * FROM session")
+        values = self.cursor.fetchall()
+        return values
+
+    def insert_session_information(self, session_id: int, hall_id: int, film_id: int):
+        """функция добавляет новые данные сессий в БД"""
+        self.cursor.execute(f"INSERT INTO session_information(session_id, hall_id, film_id) "
+                            f"VALUES({session_id},{hall_id},{film_id})")
+        self.database.commit()
+
+    def get_sessions_information(self):
+        """функция получает данные всей информации о сессиях"""
+        self.cursor.execute(f"SELECT * FROM session_information")
+        values = self.cursor.fetchall()
+        return values
+
