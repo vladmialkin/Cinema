@@ -57,6 +57,11 @@ class Customer:
         place = []
         for row in self.view.sales_table.rows:
             place.append(row.data[2])
+            film_id = self.model.get_film_for_name(name=row.data[1])
+
+            self.model.create_sale(hall_id=row.data[0][-1], place=row.data[2], session_id=self.session_id,
+                                   film_id=film_id)
+            self.model.update_place(session_id=self.session_id, hall_id=row.data[0][-1], number=row.data[2])
         self.view.sales_table.rows.clear()
         place.sort()
         for row in self.view.hall_place_table.controls:
