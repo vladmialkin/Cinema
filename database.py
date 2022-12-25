@@ -43,6 +43,7 @@ class Database:
                             "id_hall INT,"
                             "employment INT,"
                             "session_id INT,"
+                            "number INT,"
                             "PRIMARY KEY (id))")
         self.database.commit()
 
@@ -69,6 +70,15 @@ class Database:
                             "id INT NOT NULL AUTO_INCREMENT,"
                             "session_id INT,"
                             "hall_id INT,"
+                            "film_id INT,"
+                            "PRIMARY KEY (id))")
+        self.database.commit()
+
+        self.cursor.execute("CREATE TABLE IF NOT EXISTS sale("
+                            "id INT NOT NULL AUTO_INCREMENT,"
+                            "hall_id INT,"
+                            "place INT,"
+                            "session_id INT,"
                             "film_id INT,"
                             "PRIMARY KEY (id))")
         self.database.commit()
@@ -126,6 +136,12 @@ class Database:
                             f"VALUES('{name_film}',{genre_id})")
         self.database.commit()
 
+    def get_film_for_name(self, name: str):
+        """функция получает данные фильма по его значениям"""
+        self.cursor.execute(f"SELECT * FROM film WHERE name='{name}'")
+        values = self.cursor.fetchone()
+        return values
+
     def get_films(self, session_id, hall_id):
         """функция получает данные всех фильмов"""
         self.cursor.execute(f"SELECT DISTINCT film.id, film.name, film.genre_id FROM film "
@@ -167,3 +183,15 @@ class Database:
         values = self.cursor.fetchall()
         return values
 
+    def create_sale(self, hall_id: int, place: int, session_id: int, film_id: int):
+        """функция создает продажу билета"""
+        self.cursor.execute(f"INSERT INTO sale(hall_id, place, session_id, film_id) "
+                            f"VALUES({hall_id},{place},{session_id}, {film_id})")
+        self.database.commit()
+
+    def update_employment_place(self, session_id: int, hall_id: int, number: int):
+        """функция изменяет место на занятое"""
+        self.cursor.execute(f"UPDATE places SET "
+                            f"employment = 1 WHERE "
+                            f"id_hall = {hall_id} and session_id = {session_id} and number = {number}")
+        self.database.commit()
