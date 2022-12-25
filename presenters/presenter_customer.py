@@ -3,9 +3,10 @@ from models import ModelCustomer
 
 
 class Customer:
-    def __init__(self, database, page):
+    def __init__(self, database, page, session_id):
         self.database = database
         self.page = page
+        self.session_id = session_id
         self.model = ModelCustomer(self.database)
         self.view = ViewCustomer()
 
@@ -20,18 +21,20 @@ class Customer:
     def create_tables(self, place_on_click, hall_id):
         """функция созадния таблицы"""
         id_hall = self.view.hall_dropdown.value[-1]
-        data = self.model.get_places_to_hall_table(id_hall)
+        data = self.model.get_places_to_hall_table(id_hall=id_hall, session_id=self.session_id)
         self.view.create_hall_place_table(data=data, place_on_click=place_on_click, hall_id=hall_id)
         self.view.create_sale_table()
         self.page.update()
 
     def insert_dropdowns(self):
         """функция заполняет данными выпадающие списки"""
-        names_halls, id_halls = self.model.get_halls_to_dropdown()
+        names_halls, id_halls = self.model.get_halls_to_dropdown(session_id=self.session_id)
         self.view.insert_dropdowns(dropdown=self.view.hall_dropdown, values=names_halls, data=id_halls)
         names_genres, id_genres = self.model.get_genres_to_dropdown()
         self.view.insert_dropdowns(dropdown=self.view.genre_dropdown, values=names_genres, data=id_genres)
-
+        hall_id = self.view.hall_dropdown.value[-1]
+        names_films, id_films = self.model.get_films_to_dropdown(session_id=self.session_id, hall_id=hall_id)
+        self.view.insert_dropdowns(dropdown=self.view.film_dropdown, values=names_films, data=id_films)
 
     def place_on_click(self, event):
         """функция нажатия на выбранное место в зале"""
@@ -39,7 +42,8 @@ class Customer:
         place = data.get("place")
         if event.control.bgcolor is self.view.blue_color:
             event.control.bgcolor = self.view.yellow_color
-            new_data = [1, "Гарри Потный", place, "20:12"]
+            session_start, session_time = self.model.get_session_to_hall_table(self.session_id)
+            new_data = [self.view.hall_dropdown.value, self.view.film_dropdown.value, place, session_start]
             self.view.create_row_sale_table(new_data)
         elif event.control.bgcolor is self.view.yellow_color:
             for index, table_row in enumerate(self.view.sales_table.rows):
@@ -76,4 +80,9 @@ class Customer:
 
     def hall_on_change(self, event):
         """функция изменяет зал на выбранный"""
+        self.view.hall_dropdown.value = event.data
+        self.view.film_dropdown.options.clear()
+        hall_id = self.view.hall_dropdown.value[-1]
+        names_films, id_films = self.model.get_films_to_dropdown(session_id=self.session_id, hall_id=hall_id)
+        self.view.insert_dropdowns(dropdown=self.view.film_dropdown, values=names_films, data=id_films)
         self.create_tables(place_on_click=self.place_on_click, hall_id=self.view.hall_dropdown.value[-1])
