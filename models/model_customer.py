@@ -78,3 +78,16 @@ class ModelCustomer:
         session_time = session[1]
         session_start = session_time.split("-")[0]
         return session_start, session_time
+
+    def create_sale(self, hall_id: int, place: int, session_id: int, film_id: int):
+        """функция создает продажу билета"""
+        self.database.create_sale(hall_id=hall_id, place=place, session_id=session_id, film_id=film_id)
+
+    def update_place(self, session_id: int, hall_id: int, number: int):
+        """функция изменяет место на занятое"""
+        self.database.update_employment_place(session_id=session_id, hall_id=hall_id, number=number)
+
+    def get_film_for_name(self, name: str):
+        film = self.database.get_film_for_name(name=name)
+        film_id = film[0]
+        return film_id
