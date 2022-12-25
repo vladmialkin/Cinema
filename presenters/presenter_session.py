@@ -1,5 +1,7 @@
 from models import ModelSession
 from views import ViewSessions
+from presenters import Manager
+from presenters import Customer
 
 
 class Sessions:
@@ -9,6 +11,8 @@ class Sessions:
         self.model = ModelSession(self.database)
         self.view = ViewSessions()
         self.create_sessions()
+        self.manager_presenter = None
+        self.customer_presenter = None
 
     def create_sessions(self):
         """функция создания отображения сеансов"""
@@ -17,4 +21,9 @@ class Sessions:
 
     def session_on_click(self, event):
         """функция нажатия на сеанс"""
-        print(event.control.data)
+        data = event.control.data
+        session_id = data.get("session_id")
+        self.manager_presenter = Manager(database=self.database, page=self.page)
+        self.customer_presenter = Customer(database=self.database, page=self.page, session_id=session_id)
+        self.page.views.append(self.customer_presenter.view)
+        self.page.update()

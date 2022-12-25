@@ -4,6 +4,7 @@ import flet
 class ViewCustomer(flet.View):
     def __init__(self):
         super().__init__()
+        self.route = "customer"
         self.row_dropdowns = flet.Row()
         self.horizontal_alignment = "center"
         self.blue_color = flet.colors.BLUE
@@ -95,7 +96,7 @@ class ViewCustomer(flet.View):
             flet.DataColumn(flet.Text("Зал", size=20)),
             flet.DataColumn(flet.Text("Фильм", size=20)),
             flet.DataColumn(flet.Text("Место", size=20)),
-            flet.DataColumn(flet.Text("Начало фильма", size=20))
+            flet.DataColumn(flet.Text("Сеанс", size=20))
         ]
 
     def create_row_sale_table(self, data):
